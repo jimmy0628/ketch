@@ -14,6 +14,15 @@ endif
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 
+KUBECTL_VERSION=v1.22.2
+KUBECTL_INSTALL_DIR ?= "/usr/local/bin"
+
+KUBEAPI_SERVER_VERSION=v1.22.2
+KUBEAPI_SERVER_INSTALL_DIR ?= "/usr/local/bin"
+
+ETCD_VERSION=v3.4.16
+ETCD_INSTALL_DIR ?= "/usr/local/bin"
+
 KUBEBUILDER_VERSION=3.1.0
 KUBEBUILDER_INSTALL_DIR ?= "/usr/local/bin"
 KUBEBUILDER_RELEASE=kubebuilder_${GOOS}_${GOARCH}
@@ -50,8 +59,26 @@ run: generate fmt vet manifests
 install: manifests
 	kustomize build config/crd | kubectl apply -f -
 
+.PHONY: install-kubectl
+install-kubectl:
+	curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/${GOOS}/${GOARCH}/kubectl"
+	chmod 777 kubectl && sudo mv kubectl ${KUBECTL_INSTALL_DIR}
+
+.PHONY: install-kube-apiserver
+install-kube-apiserver:
+	curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/${GOOS}/${GOARCH}/kube-apiserver
+	chmod 777 kube-apiserver && sudo mv kube-apiserver ${KUBEAPI_SERVER_INSTALL_DIR}
+
+.PHONY: install-etcd
+install-etcd:
+	curl -L -O "https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-${GOOS}-${GOARCH}.tar.gz"
+	tar -zxvf etcd-${ETCD_VERSION}-${GOOS}-${GOARCH}.tar.gz && mv etcd-${ETCD_VERSION}-${GOOS}-${GOARCH}/etcd etcd
+	chmod 777 etcd && sudo mv etcd ${ETCD_INSTALL_DIR}
+	rm etcd-${ETCD_VERSION}-${GOOS}-${GOARCH}.tar.gz
+	rm -rf etcd-${ETCD_VERSION}-${GOOS}-${GOARCH}
+
 .PHONY: install-kubebuilder
-install-kubebuilder:
+install-kubebuilder: install-kubectl install-kube-apiserver install-etcd
 	curl -L -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBEBUILDER_VERSION}/${KUBEBUILDER_RELEASE}"
 	mv ${KUBEBUILDER_RELEASE} kubebuilder && chmod 777 kubebuilder && sudo mv kubebuilder ${KUBEBUILDER_INSTALL_DIR}
 
