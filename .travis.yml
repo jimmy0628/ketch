@@ -11,10 +11,8 @@ jobs:
       language: go
       go: "1.17"
       script:
-        - make install-kubebuilder KUBEBUILDER_INSTALL_DIR=/tmp KUBEAPI_SERVER_INSTALL_DIR=/tmp KUBECTL_INSTALL_DIR=/tmp KUBECTL_INSTALL_DIR=/tmp ETCD_INSTALL_DIR=/tmp
-        - export TEST_ASSET_KUBECTL=/tmp/kubectl
-        - export TEST_ASSET_KUBE_APISERVER=/tmp/kube-apiserver
-        - export TEST_ASSET_ETCD=/tmp/etcd
+        - make install-kubebuilder KUBEBUILDER_INSTALL_DIR=/tmp/bin KUBEAPI_SERVER_INSTALL_DIR=/tmp/bin KUBECTL_INSTALL_DIR=/tmp/bin KUBECTL_INSTALL_DIR=/tmp ETCD_INSTALL_DIR=/tmp/bin
+        - export PATH="/tmp/bin:$PATH"
         - make test
 
     - stage: build
