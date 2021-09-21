@@ -192,7 +192,7 @@ func New(application *ketchv1.App, framework *ketchv1.Framework, opts ...Option)
 	values.App.IsAccessible = isAppAccessible(values.App)
 	fmt.Printf("%+v\n", *values.App.Service)
 	//fmt.Printf("%+v\n", options.Templates)
-	fmt.Printf("%+v\n", options.Templates.Yamls)
+	//fmt.Printf("%+v\n", options.Templates.Yamls)
 	return &ApplicationChart{
 		values:    *values,
 		templates: options.Templates.Yamls,

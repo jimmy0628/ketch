@@ -265,6 +265,37 @@ func (r *AppReconciler) reconcile(ctx context.Context, app *ketchv1.App) reconci
 			message: fmt.Sprintf("failed to update helm chart: %v", err),
 		}
 	}
+	/////////////////////////
+	fmt.Println("trying to make new service?")
+	appTpls, err := r.TemplateReader.Get(templates.AppConfigMapName())
+	if err != nil {
+		return reconcileResult{
+			status:  v1.ConditionFalse,
+			message: fmt.Sprintf(`failed to read configmap with the app's chart templates: %v`, err),
+		}
+	}
+	fmt.Printf("%+v\n", appTpls)
+	chartOpts := []chart.Option{
+		chart.WithExposedPorts(app.ExposedPorts()),
+		chart.WithTemplates(*appTpls),
+	}
+
+	c, err := chart.New(app, &framework, chartOpts...)
+	if err != nil {
+		return reconcileResult{
+			status:  v1.ConditionFalse,
+			message: err.Error(),
+		}
+	}
+	_, err = helmClient.UpdateChart(*c, chart.NewChartConfig(*app))
+	if err != nil {
+		return reconcileResult{
+			status:  v1.ConditionFalse,
+			message: fmt.Sprintf("failed to  sadkfsalkdfnkjlsdfkjlnsakljdupdate helm chart: %v", err),
+		}
+	}
+	////////////////////////////////
+
 	return reconcileResult{
 		framework: ref,
 		status:    v1.ConditionTrue,
