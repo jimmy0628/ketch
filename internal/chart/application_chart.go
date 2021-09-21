@@ -53,6 +53,11 @@ type ingress struct {
 	Https []httpsEndpoint `json:"https"`
 }
 
+type GatewayService struct {
+	Version     ketchv1.DeploymentVersion
+	ProcessName string
+}
+
 type app struct {
 	Name        string        `json:"name"`
 	Deployments []deployment  `json:"deployments"`
@@ -63,6 +68,8 @@ type app struct {
 	// For example, "spec.rules" of an Ingress object must contain at least one rule.
 	IsAccessible bool   `json:"isAccessible"`
 	Group        string `json:"group"`
+
+	Service *GatewayService
 }
 
 type deployment struct {
@@ -148,9 +155,18 @@ func New(application *ketchv1.App, framework *ketchv1.Framework, opts ...Option)
 		}
 		exposedPorts := options.ExposedPorts[deployment.Version]
 		c := NewConfigurator(deploymentSpec.KetchYaml, *procfile, exposedPorts, DefaultApplicationPort)
+		fmt.Println(deployment.Version)
 		for _, processSpec := range deploymentSpec.Processes {
 			name := processSpec.Name
 			isRoutable := procfile.IsRoutable(name)
+			fmt.Println("in the process loop")
+			if isRoutable {
+				fmt.Println("found a routable process")
+				values.App.Service = &GatewayService{
+					Version:     deployment.Version,
+					ProcessName: name,
+				}
+			}
 			process, err := newProcess(name, isRoutable,
 				withCmd(c.procfile.Processes[name]),
 				withUnits(processSpec.Units),
@@ -174,6 +190,9 @@ func New(application *ketchv1.App, framework *ketchv1.Framework, opts ...Option)
 		values.App.Deployments = append(values.App.Deployments, deployment)
 	}
 	values.App.IsAccessible = isAppAccessible(values.App)
+	fmt.Printf("%+v\n", *values.App.Service)
+	//fmt.Printf("%+v\n", options.Templates)
+	fmt.Printf("%+v\n", options.Templates.Yamls)
 	return &ApplicationChart{
 		values:    *values,
 		templates: options.Templates.Yamls,

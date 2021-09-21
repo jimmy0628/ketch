@@ -162,6 +162,7 @@ func (r *AppReconciler) reconcile(ctx context.Context, app *ketchv1.App) reconci
 		}
 	}
 	tpls, err := r.TemplateReader.Get(templates.IngressConfigMapName(framework.Spec.IngressController.IngressType.String()))
+	//fmt.Printf("%+v\n", *tpls)
 	if err != nil {
 		return reconcileResult{
 			status:  v1.ConditionFalse,
